@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"],
+      "@guards/*": ["src/guards/*"],
+      "@exceptions/*": ["src/exception-filters/*"],
+      "@middleware/*": ["src/middleware/*"],
+      "@strategies/*": ["src/strategies/*"],
+      "@providers/*": ["src/providers/*"],
+      "@decorators/*": ["src/decorators/*"],
+      "@shared/*": ["src/shared/*"],
+      "@logger/*": ["src/logger/*"],
+      "@auth/*": ["src/modules/auth/*"],
+      "@users/*": ["src/modules/user/*"],
+      "@roles/*": ["src/modules/role/*"],
+      "@permissions/*": ["src/modules/permission/*"],
+      "@role-permission/*": ["src/modules/role-permission/*"],
+      "@user-role/*": ["src/modules/user-role/*"]
+    }
+  }
+}

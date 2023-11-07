@@ -1,0 +1,181 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type PermissionEntity {
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  id: Int!
+  name: String!
+  description: String
+  action: ActionEnum
+  entity: EntityEnum
+  roleIdApplied: Int
+}
+
+"""
+The javascript `Date` as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
+"""
+scalar Timestamp
+
+enum ActionEnum {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  LOGIN
+  REGISTER
+}
+
+"""Entities set permissions"""
+enum EntityEnum {
+  AUTH
+
+  """Users resource"""
+  USERS
+
+  """Roles resource"""
+  ROLES
+}
+
+type RolePermissionEntity {
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  roleId: Int!
+  permissionId: Int!
+  permission: PermissionEntity!
+}
+
+type RoleEntity {
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  id: Int!
+  name: String
+  rolePermissions: [RolePermissionEntity!]
+}
+
+type UserRoleEntity {
+  roleId: Int!
+  userId: String!
+  role: RoleEntity!
+}
+
+type RegisterResponseDto {
+  id: UUID!
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  accessToken: String!
+  refreshToken: String!
+}
+
+"""
+A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+"""
+scalar UUID
+
+"""
+A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
+"""
+scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
+
+type UserDto {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  id: UUID!
+  email: EmailAddress!
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type UserPage {
+  """Current page that records were queried"""
+  page: Int!
+
+  """The maximum records will be displayed on each of the pages"""
+  take: Int!
+
+  """The maximum records found"""
+  itemCount: Int!
+
+  """The total page count"""
+  pageCount: Int!
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+
+  """A list of data"""
+  data: [UserDto!]!
+}
+
+type Query {
+  getUsers(queryParams: PageOptionsDto!): UserPage!
+  getUsersWithoutToken(queryParams: PageOptionsDto!): UserPage!
+}
+
+input PageOptionsDto {
+  """The order of the records"""
+  order: Sort! = DESC
+
+  """Current page that records will be queried"""
+  page: Int! = 1
+
+  """The quantity of records"""
+  take: Int! = 30
+
+  """The search text will be applied"""
+  q: String
+
+  """Set value for this to query the soft deleted records"""
+  isDeleted: Boolean
+
+  """A list of record's IDs"""
+  ids: [String!]
+
+  """Enable to TRUE to query all of the records"""
+  selectAll: Boolean
+}
+
+enum Sort {
+  ASC
+  DESC
+}
+
+type Mutation {
+  createRole(payload: CreateRoleDto!): Int!
+  register(payload: RegisterDto!): RegisterResponseDto!
+  login(payload: LoginDto!): RegisterResponseDto!
+  createScope(payload: CreatePermissionDto!): Int!
+}
+
+input CreateRoleDto {
+  name: String!
+  permissions: [Int!]!
+}
+
+input RegisterDto {
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  password: String!
+}
+
+input LoginDto {
+  email: EmailAddress!
+  password: String!
+}
+
+input CreatePermissionDto {
+  name: String!
+  action: ActionEnum!
+  entity: EntityEnum!
+  description: String
+  roleIdApplied: Int
+}
