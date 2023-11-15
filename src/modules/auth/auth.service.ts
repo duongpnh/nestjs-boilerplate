@@ -1,16 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ERROR } from '@common/constants/errors.constant';
 import { ErrorCode } from '@common/enums/error-code.enum';
 import { ConfigService } from '@config/config.service';
-import { comparePassword, hashPassword } from '@providers/utils.service';
+import { UtilsService } from '@providers/utils.service';
 import { UserEntity } from '@users/user.entity';
 
+import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
@@ -20,76 +27,69 @@ export class AuthService {
     private _dataSource: DataSource,
     private _jwtService: JwtService,
     private _config: ConfigService,
+    @InjectRepository(UserEntity)
+    private _userRepo: Repository<UserEntity>,
   ) {}
 
-  async register(payload: RegisterDto): Promise<RegisterResponseDto> {
-    const queryRunner = this._dataSource.createQueryRunner();
-    await queryRunner.startTransaction();
-    const { manager } = queryRunner;
-
+  /**
+   * Register a new user, and add user's role
+   * @param payload an object instance of {@link RegisterDto}
+   * @returns HttpStatus: 200 - register success, 409 if email address has existed
+   */
+  async register(payload: RegisterDto): Promise<HttpStatus> {
     const { email, password } = payload;
 
-    const userExisted = await manager.findOne(UserEntity, {
+    const userExisted = await this._userRepo.findOne({
       where: { email },
     });
 
     if (userExisted) {
-      throw new BadRequestException(ERROR[ErrorCode.ACCOUNT_EXISTED]);
+      throw new ConflictException(ERROR[ErrorCode.ACCOUNT_EXISTED]);
     }
 
     try {
-      const { hash, salt } = await hashPassword(password);
-      const user = await manager.save(UserEntity, {
+      const { hash, salt } = await UtilsService.hashPassword(password);
+      await this._userRepo.save({
         ...payload,
         hash,
         salt,
       });
-      const accessToken = await this._jwtService.signAsync(payload);
-      const refreshToken = await this._jwtService.signAsync({ id: user.id }, { expiresIn: '7d' });
 
-      await queryRunner.commitTransaction();
-
-      return {
-        ...user,
-        accessToken,
-        refreshToken,
-      };
+      return HttpStatus.OK;
     } catch (e) {
-      await queryRunner.rollbackTransaction();
-
       throw new BadRequestException(e);
-    } finally {
-      await queryRunner.release();
     }
   }
 
-  async login(payload: LoginDto): Promise<RegisterResponseDto> {
-    const queryRunner = this._dataSource.createQueryRunner();
-    await queryRunner.startTransaction();
-    const { manager } = queryRunner;
-
+  /**
+   * Login
+   * @param payload an object instance of {@link LoginDto}
+   * @returns
+   * - an object instance of {@link LoginResponseDto}
+   * - 404 - User does not exist
+   * - 401 - Invalid credentials
+   */
+  async login(payload: LoginDto): Promise<LoginResponseDto> {
     const { email, password } = payload;
-    const { jwtConfig } = this._config;
+    const { expirationTime } = this._config.jwtConfig;
 
-    const user = await manager.findOne(UserEntity, {
+    const user = await this._userRepo.findOne({
       where: { email },
     });
 
     if (!user) {
-      throw new BadRequestException(ERROR[ErrorCode.INVALID_CREDENTIALS]);
+      throw new NotFoundException(ERROR[ErrorCode.USER_NOT_FOUND]);
     }
 
     try {
-      const match = await comparePassword(password, user.salt, user.hash);
+      const match = await UtilsService.comparePassword(password, user.salt, user.hash);
 
       if (!match) {
         throw new UnauthorizedException(ERROR[ErrorCode.INVALID_CREDENTIALS]);
       }
 
-      const accessToken = await this._jwtService.signAsync(payload);
-      const refreshToken = await this._jwtService.signAsync({ id: user.id }, { expiresIn: jwtConfig.expirationTime });
-
-      await queryRunner.commitTransaction();
+      const accessToken = await this._jwtService.signAsync({ id: user.id });
+      const refreshToken = await this._jwtService.signAsync({ id: user.id }, { expiresIn: expirationTime });
 
       return {
         ...user,
@@ -97,11 +97,7 @@ export class AuthService {
         refreshToken,
       };
     } catch (e) {
-      await queryRunner.rollbackTransaction();
-
       throw new BadRequestException(e);
-    } finally {
-      await queryRunner.release();
     }
   }
 }

@@ -3,6 +3,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, ILike, Repository } from 'typeorm';
 import { ERROR } from '@common/constants/errors.constant';
 import { ErrorCode } from '@common/enums/error-code.enum';
+import { ConfigService } from '@config/config.service';
 import { RolePermissionEntity } from '@role-permission/role-permission.entity';
 
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -15,6 +16,7 @@ export class RolesService {
     private _repo: Repository<RoleEntity>,
     @InjectDataSource()
     private _dataSource: DataSource,
+    private _config: ConfigService,
   ) {}
 
   /**

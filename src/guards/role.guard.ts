@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { CanActivate, ExecutionContext, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { RouteInfo } from '@nestjs/common/interfaces';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
-import {
-  GRAPHQL_ANONYMOUS_ROUTES,
-  IRouteInfo,
-  MAPPING_GQL_OPS_TO_ENTITY_ACTION,
-} from '@common/constants/entity.constant';
+import { Entity, FindManyOptions, Repository } from 'typeorm';
+import { EntityEnum, IRouteInfo, MAPPING_GQL_OPS_TO_ENTITY_ACTION } from '@common/constants/entity.constant';
 import { ERROR } from '@common/constants/errors.constant';
 import { ContextType } from '@common/enums/context-type.enum';
 import { ErrorCode } from '@common/enums/error-code.enum';
@@ -19,11 +16,8 @@ import { ContextService } from '../providers/context.service';
 
 interface IPropsCheckPermissionByAction {
   entity: string;
-  params: any;
   action: string;
   userPermissions: Record<string, any>[];
-  gplInfo?: any;
-  authId?: string;
 }
 
 @Injectable()
@@ -48,13 +42,21 @@ export class RolesGuard implements CanActivate {
       request = ctx.getContext().req;
       gqlInfo = ctx.getInfo();
     } else {
-      return true;
+      request = context.switchToHttp().getRequest();
     }
 
-    return this.checkUserPermissionGQL(request, gqlInfo);
+    let isPassed = false;
+
+    if (!gqlInfo) {
+      isPassed = await this.checkUserPermissionRestAPI(request);
+    } else {
+      isPassed = await this.checkUserPermissionGraphQL(request, gqlInfo);
+    }
+
+    return isPassed;
   }
 
-  determineEntityInGQL(gqlInfo: any): IRouteInfo | null {
+  determineEntityInGraphQL(gqlInfo: any): IRouteInfo | null {
     const { key } = gqlInfo.path;
     const routeInfo = MAPPING_GQL_OPS_TO_ENTITY_ACTION[key];
 
@@ -88,7 +90,9 @@ export class RolesGuard implements CanActivate {
   checkPermissionByAction(props: IPropsCheckPermissionByAction): boolean {
     const { entity, action, userPermissions } = props;
 
-    return userPermissions.some((permission) => permission.entity === entity && permission.action === action);
+    return userPermissions.some(
+      (permission) => permission.entity.toLowerCase() === entity.toLowerCase() && permission.action === action,
+    );
   }
 
   decodeAuthToken(token: string): any {
@@ -96,36 +100,11 @@ export class RolesGuard implements CanActivate {
     return this._jwtService.decode(fullToken, { json: true });
   }
 
-  async checkUserPermissionGQL(request: any, gplInfo: any) {
-    const {
-      headers: { authorization },
-    } = request;
-    const entityInfo = this.determineEntityInGQL(gplInfo);
-
-    if (!entityInfo) {
-      const fn = ERROR[ErrorCode.API_PERMISSION_MISSED];
-      throw new InternalServerErrorException(typeof fn === 'function' && fn(gplInfo.fieldName));
-    }
-
-    let isPassed = false;
-
-    isPassed = GRAPHQL_ANONYMOUS_ROUTES.some(
-      (anonymousRoute) => anonymousRoute.action === entityInfo?.action && anonymousRoute.entity === entityInfo?.entity,
-    );
-
-    if (isPassed && !authorization) {
-      return true;
-    }
-
-    if (!authorization) {
-      return false;
-    }
-
+  async checkUserPermissionForRequest(entityInfo: IRouteInfo): Promise<boolean> {
     const { entity, action } = entityInfo;
-
-    const decodedToken = this.decodeAuthToken(authorization);
-
     const userPermissions = ContextService.getPermissions();
+
+    if (!entity || !Array.isArray(userPermissions) || !userPermissions.length) return false;
 
     switch (action) {
       case ActionEnum.READ:
@@ -133,22 +112,69 @@ export class RolesGuard implements CanActivate {
       case ActionEnum.RESTORE:
       case ActionEnum.UPDATE:
       case ActionEnum.DELETE: {
-        const { params } = request;
-        const authId = decodedToken.sub;
-        isPassed = await this.checkPermissionByAction({
+        return await this.checkPermissionByAction({
           entity,
-          params,
           action,
           userPermissions,
-          gplInfo,
-          authId,
         });
-
-        return isPassed;
       }
 
       default:
-        return isPassed;
+        return false;
     }
+  }
+
+  async checkUserPermissionGraphQL(request: any, gplInfo: any) {
+    const { headers } = request;
+
+    if (!headers.authorization) {
+      return false;
+    }
+
+    const entityInfo = this.determineEntityInGraphQL(gplInfo);
+
+    if (!entityInfo) {
+      const fn = ERROR[ErrorCode.API_PERMISSION_MISSED];
+      throw new InternalServerErrorException(typeof fn === 'function' && fn(gplInfo.fieldName));
+    }
+
+    return await this.checkUserPermissionForRequest(entityInfo);
+  }
+
+  determineEntityBasedOnUrl(method: string, route: RouteInfo): IRouteInfo {
+    const endpointItems = (route.path || '').split('/');
+    const prefix = endpointItems.length > 1 ? endpointItems[1] : null;
+
+    const actions = {
+      GET: ActionEnum.READ,
+      POST: ActionEnum.CREATE,
+      PUT: ActionEnum.UPDATE,
+      PATCH: ActionEnum.UPDATE,
+      DELETE: ActionEnum.DELETE,
+    };
+
+    let entity;
+
+    if (prefix && prefix.toUpperCase() in EntityEnum) {
+      entity = prefix.toUpperCase();
+    }
+
+    ContextService.setEntity(entity);
+
+    return {
+      entity: entity,
+      action: actions[method],
+    };
+  }
+
+  async checkUserPermissionRestAPI(request: any) {
+    const { method, route, headers } = request;
+
+    if (!headers.authorization) {
+      return false;
+    }
+    const entityInfo = this.determineEntityBasedOnUrl(method, route);
+
+    return await this.checkUserPermissionForRequest(entityInfo);
   }
 }

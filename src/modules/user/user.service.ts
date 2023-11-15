@@ -1,8 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ERROR } from '@common/constants/errors.constant';
 import { PageOptionsDto } from '@common/dto/page-options.dto';
 import { PagingResponseDto } from '@common/dto/paging-response.dto';
+import { ErrorCode } from '@common/enums/error-code.enum';
 import { GeneralLogger } from '@logger/general.logger';
 import { UserDto } from './dto/user.dto';
 import { UserEntity } from './user.entity';
@@ -25,16 +27,34 @@ export class UsersService extends BaseService<UserDto> {
       const { entityName } = this;
       const qb = this.createBaseQueryBuilder(options);
 
-      return this.paginate(options, () => {
-        if (q) {
-          qb.andWhere(`to_tsquery(CONCAT("${entityName}".first_name, ' | ', "${entityName}".last_name)) @@ :q`, {
-            q,
-          });
-        }
+      if (q) {
+        qb.andWhere(`to_tsquery(CONCAT("${entityName}".first_name, ' | ', "${entityName}".last_name)) @@ :q`, {
+          q,
+        });
+      }
 
-        // remember to return query builder
-        return qb;
-      });
+      const { data, ...meta } = await qb.paginate(options);
+
+      return data.toPageDto(meta, options);
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  /**
+   * Get an user by ID
+   * @param id User's ID
+   * @returns an object instance of {@link UserDto}
+   */
+  async getUserById(id: string): Promise<UserDto> {
+    try {
+      const user = await this._repo.findOneBy({ id });
+
+      if (!user) {
+        throw new NotFoundException(ERROR[ErrorCode.USER_NOT_FOUND]);
+      }
+
+      return user.toDto();
     } catch (e) {
       throw new BadRequestException(e);
     }

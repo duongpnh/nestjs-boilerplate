@@ -2,7 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { EmailAddressResolver, UUIDResolver } from 'graphql-scalars';
 
 @ObjectType()
-export class RegisterResponseDto {
+export class LoginResponseDto {
   @Field(() => UUIDResolver)
   id: string;
 

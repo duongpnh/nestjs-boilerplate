@@ -11,7 +11,6 @@ type PermissionEntity {
   description: String
   action: ActionEnum
   entity: EntityEnum
-  roleIdApplied: Int
 }
 
 """
@@ -38,6 +37,7 @@ enum EntityEnum {
 
   """Roles resource"""
   ROLES
+  PERMISSIONS
 }
 
 type RolePermissionEntity {
@@ -64,14 +64,20 @@ type UserRoleEntity {
   role: RoleEntity!
 }
 
-type RegisterResponseDto {
+type UserDto {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
   id: UUID!
   email: EmailAddress!
   firstName: String!
   lastName: String!
-  accessToken: String!
-  refreshToken: String!
 }
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
 
 """
 A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
@@ -83,18 +89,14 @@ A field whose value conforms to the standard internet email address format as sp
 """
 scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
 
-type UserDto {
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
+type LoginResponseDto {
   id: UUID!
   email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  accessToken: String!
+  refreshToken: String!
 }
-
-"""
-A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-"""
-scalar DateTime
 
 type UserPage {
   """Current page that records were queried"""
@@ -122,25 +124,25 @@ type Query {
 
 input PageOptionsDto {
   """The order of the records"""
-  order: Sort! = DESC
+  order: Sort = DESC
 
   """Current page that records will be queried"""
-  page: Int! = 1
+  page: Int = 1
 
   """The quantity of records"""
-  take: Int! = 30
+  take: Int = 30
 
   """The search text will be applied"""
   q: String
 
   """Set value for this to query the soft deleted records"""
-  isDeleted: Boolean
+  isDeleted: BooleanEnum
 
   """A list of record's IDs"""
   ids: [String!]
 
   """Enable to TRUE to query all of the records"""
-  selectAll: Boolean
+  selectAll: BooleanEnum
 }
 
 enum Sort {
@@ -148,10 +150,15 @@ enum Sort {
   DESC
 }
 
+enum BooleanEnum {
+  TRUE
+  FALSE
+}
+
 type Mutation {
   createRole(payload: CreateRoleDto!): Int!
-  register(payload: RegisterDto!): RegisterResponseDto!
-  login(payload: LoginDto!): RegisterResponseDto!
+  register(payload: RegisterDto!): Int!
+  login(payload: LoginDto!): LoginResponseDto!
   createScope(payload: CreatePermissionDto!): Int!
 }
 

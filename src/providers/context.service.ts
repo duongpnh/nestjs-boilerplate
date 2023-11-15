@@ -1,5 +1,6 @@
 import * as requestContext from 'request-context';
 import { PermissionEntity } from '@permissions/permission.entity';
+import { UserDto } from '@users/dto/user.dto';
 
 export interface IRequestInfo {
   ipAddress: string;
@@ -14,6 +15,7 @@ export class ContextService {
   private static _authUserEmail = 'user_email';
   private static _entity = 'entity';
   private static _permissions = 'permissions';
+  private static _authUserInfo = 'auth_user_info';
 
   static get<T>(key: string): T {
     return requestContext.get(ContextService._getKeyWithNamespace(key));
@@ -81,5 +83,13 @@ export class ContextService {
 
   static getEntity(): string {
     return ContextService.get(this._entity);
+  }
+
+  static setAuthUserInfo(user: UserDto): void {
+    return ContextService.set(this._authUserInfo, user);
+  }
+
+  static getAuthUserInfo(): UserDto {
+    return ContextService.get(this._authUserInfo);
   }
 }

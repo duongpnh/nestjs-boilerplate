@@ -6,6 +6,7 @@ export enum EntityEnum {
   AUTH = 'AUTH',
   USERS = 'USERS',
   ROLES = 'ROLES',
+  PERMISSIONS = 'PERMISSIONS',
 }
 
 export const MAPPING_ENTITY_DESCRIPTION: Partial<Record<EntityEnum, EnumMetadataValuesMapOptions>> = {
@@ -24,36 +25,13 @@ registerEnumType(EntityEnum, {
 });
 
 export interface IRouteInfo {
-  entity: EntityEnum;
+  entity?: EntityEnum;
   action: ActionEnum;
 }
 
 export const MAPPING_GQL_OPS_TO_ENTITY_ACTION: Record<string, IRouteInfo> = {
-  // getUsers: {
-  //   entity: EntityEnum.USERS,
-  //   action: ActionEnum.READ,
-  // },
+  getUsers: {
+    entity: EntityEnum.USERS,
+    action: ActionEnum.READ,
+  },
 };
-
-export const entitiesWillBeCheck = [EntityEnum.USERS];
-
-export const ANONYMOUS_ROUTES = [
-  // {
-  //   method: 'POST',
-  //   routePath: '/login',
-  // },
-  // {
-  //   method: 'POST',
-  //   routePath: '/register',
-  // },
-];
-export const GRAPHQL_ANONYMOUS_ROUTES = [
-  // {
-  //   entity: EntityEnum.AUTH,
-  //   action: ActionEnum.LOGIN,
-  // },
-  // {
-  //   entity: EntityEnum.AUTH,
-  //   action: ActionEnum.REGISTER,
-  // },
-];

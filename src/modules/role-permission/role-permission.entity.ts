@@ -18,7 +18,7 @@ export class RolePermissionEntity extends AbstractEntity<RolePermissionDto> {
   permissionId: number;
 
   @ManyToOne(() => PermissionEntity, (permission) => permission.rolePermissions)
-  @JoinColumn({ name: 'scope_id' })
+  @JoinColumn({ name: 'permission_id' })
   @Field(() => PermissionEntity)
   permission: PermissionEntity;
 

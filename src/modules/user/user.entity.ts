@@ -2,10 +2,12 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { EmailAddressResolver, UUIDResolver } from 'graphql-scalars';
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { AbstractEntity } from '@common/entities/abstract.entity';
+import { UseDto } from '@decorators/use-dto.decorator';
 import { UserRoleEntity } from '@user-role/user-role.entity';
 
 import { UserDto } from './dto/user.dto';
 
+@UseDto(UserDto)
 @ObjectType()
 @Entity('users')
 export class UserEntity extends AbstractEntity<UserDto> {

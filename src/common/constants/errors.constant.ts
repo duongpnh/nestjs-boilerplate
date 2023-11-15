@@ -57,11 +57,11 @@ export const ERROR: Record<ErrorCode, ErrorValue> = {
     statusCode: HttpStatus.CONFLICT,
     serverErrorCode: ErrorCode.SCOPE_EXISTED,
   },
-  // CATEGORY ERROR
-  [ErrorCode.CATEGORY_EXISTED]: {
-    message: 'Category has already existed',
-    description: 'Category has already existed',
-    statusCode: HttpStatus.CONFLICT,
-    serverErrorCode: ErrorCode.CATEGORY_EXISTED,
+  // USER ERROR
+  [ErrorCode.USER_NOT_FOUND]: {
+    message: 'User does not exist',
+    description: 'User does not exist',
+    statusCode: HttpStatus.NOT_FOUND,
+    serverErrorCode: ErrorCode.USER_NOT_FOUND,
   },
 };

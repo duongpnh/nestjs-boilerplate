@@ -1,15 +1,10 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  ANONYMOUS_ROUTES,
-  GRAPHQL_ANONYMOUS_ROUTES,
-  IRouteInfo,
-  MAPPING_GQL_OPS_TO_ENTITY_ACTION,
-} from '@common/constants/entity.constant';
+import { IRouteInfo, MAPPING_GQL_OPS_TO_ENTITY_ACTION } from '@common/constants/entity.constant';
 import { ERROR } from '@common/constants/errors.constant';
 import { ContextType } from '@common/enums/context-type.enum';
 import { ErrorCode } from '@common/enums/error-code.enum';
@@ -52,23 +47,11 @@ export class AuthGuard implements CanActivate {
     let request;
     let isPublicRoute;
 
-    if (context.getType() === ContextType.HTTP) {
-      request = context.switchToHttp().getRequest();
-      const { method, route } = request;
-
-      isPublicRoute = ANONYMOUS_ROUTES.some(
-        (anonymousRoute) => anonymousRoute.method === method && anonymousRoute.routePath === route.path,
-      );
-    } else if (context.getType<GqlContextType>() === ContextType.GRAPHQL) {
+    if (context.getType<GqlContextType>() === ContextType.GRAPHQL) {
       const ctx = GqlExecutionContext.create(context);
       request = ctx.getContext().req;
-      const gplInfo = ctx.getInfo();
-      const entityInfo = this.determineEntityInGQL(gplInfo);
-
-      isPublicRoute = GRAPHQL_ANONYMOUS_ROUTES.some(
-        (anonymousRoute) =>
-          anonymousRoute.action === entityInfo?.action && anonymousRoute.entity === entityInfo?.entity,
-      );
+    } else {
+      request = context.switchToHttp().getRequest();
     }
 
     const token = (request.headers.authorization || '').split(' ')?.[1];
@@ -80,29 +63,38 @@ export class AuthGuard implements CanActivate {
     const { jwtConfig } = this._configService;
 
     try {
-      const res = await this._jwtService.verify(token, { secret: jwtConfig.key });
+      const decodedToken = await this._jwtService.verify(token, { secret: jwtConfig.key });
 
-      // Check user already exist on cognito
       const user = await this._userRepo.findOne({
-        where: { email: res?.email },
-        relations: ['role', 'role.rolePermissions', 'role.rolePermissions.permission'],
+        where: { id: decodedToken.id },
+        relations: [
+          'userRole',
+          'userRole.role',
+          'userRole.role.rolePermissions',
+          'userRole.role.rolePermissions.permission',
+        ],
       });
 
       if (!user) {
         throw new ForbiddenException(ERROR[ErrorCode.FORBIDDEN_RESOURCE]);
       }
 
-      // const { role } = user;
-      // const { rolePermissions } = role;
+      const { userRole, ...restOfUser } = user;
+      const { rolePermissions } = userRole.role;
 
-      // const permissions = (rolePermissions || []).map(({ permission }) => {
-      //   return permission;
-      // });
+      const permissions = (rolePermissions || []).map(({ permission }) => {
+        return permission;
+      });
 
-      // ContextService.setPermissions(permissions);
+      ContextService.setPermissions(permissions);
+      ContextService.setAuthUserInfo(restOfUser);
 
       return true;
     } catch (e) {
+      if (e?.name === 'TokenExpiredError') {
+        throw new UnauthorizedException(ERROR[ErrorCode.TOKEN_EXPIRES]);
+      }
+
       return false;
     }
   }

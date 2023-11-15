@@ -18,6 +18,7 @@ import { RolesModule } from './modules/role/role.module';
 import { RolePermissionModule } from './modules/role-permission/role-permission.module';
 import { UsersModule } from './modules/user/user.module';
 import { SharedModule } from './shared/shared.module';
+import 'src/boilerplate.polyfill';
 
 @Module({
   imports: [

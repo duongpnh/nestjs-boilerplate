@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@config/config.service';
 import { SharedModule } from '@shared/shared.module';
 
+import { UserEntity } from '@users/user.entity';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 
@@ -23,6 +25,7 @@ import { AuthService } from './auth.service';
       },
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([UserEntity]),
   ],
   providers: [AuthResolver, AuthService],
 })

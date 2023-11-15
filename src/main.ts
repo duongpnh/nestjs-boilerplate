@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -30,6 +31,17 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
   const jwtService = app.get<JwtService>(JwtService);
   const userRepo = app.get(getRepositoryToken(UserEntity));
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      dismissDefaultMessages: true,
+      validationError: {
+        target: false,
+      },
+    }),
+  );
   app.useGlobalGuards(new AuthGuard(reflector, userRepo, configService, jwtService));
   app.useGlobalFilters(new RequestExceptionFilter(reflector));
 

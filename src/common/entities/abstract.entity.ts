@@ -1,10 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { TimestampResolver } from 'graphql-scalars';
 import { CreateDateColumn, DeleteDateColumn, UpdateDateColumn } from 'typeorm';
+import { type Constructor } from '@common/types/constructor.type';
 import { AbstractDto } from '../dto/abstract.dto';
 
 @ObjectType()
-export class AbstractEntity<T extends AbstractDto = AbstractDto> {
+export abstract class AbstractEntity<DTO extends AbstractDto = AbstractDto, O = never> {
   @CreateDateColumn({
     type: 'timestamp without time zone',
   })
@@ -24,9 +25,15 @@ export class AbstractEntity<T extends AbstractDto = AbstractDto> {
   @Field(() => TimestampResolver, { nullable: true })
   deletedAt: Date;
 
-  constructor(e: T) {
-    this.createdAt = e?.createdAt;
-    this.updatedAt = e?.updatedAt;
-    this.deletedAt = e?.deletedAt;
+  private dtoClass?: Constructor<DTO, [AbstractEntity, O?]>;
+
+  toDto(options?: O): DTO {
+    const dtoClass = this.dtoClass;
+
+    if (!dtoClass) {
+      throw new Error(`You need to use @UseDto on class (${this.constructor.name}) be able to call toDto function`);
+    }
+
+    return new dtoClass(this, options);
   }
 }
