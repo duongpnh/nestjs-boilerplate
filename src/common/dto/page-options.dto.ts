@@ -1,9 +1,9 @@
+import { BooleanEnum } from '@common/enums/boolean.enum';
+import { Sort } from '@common/enums/sort.enum';
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { BooleanEnum } from '@common/enums/boolean.enum';
-import { Sort } from '@common/enums/sort.enum';
 
 @InputType()
 export class PageOptionsDto {

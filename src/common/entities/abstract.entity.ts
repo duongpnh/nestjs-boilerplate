@@ -1,7 +1,7 @@
+import { type Constructor } from '@common/types/constructor.type';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { TimestampResolver } from 'graphql-scalars';
 import { CreateDateColumn, DeleteDateColumn, UpdateDateColumn } from 'typeorm';
-import { type Constructor } from '@common/types/constructor.type';
 import { AbstractDto } from '../dto/abstract.dto';
 
 @ObjectType()

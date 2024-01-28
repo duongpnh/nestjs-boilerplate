@@ -1,14 +1,13 @@
+import { ConfigService } from '@config/config.service';
+import { setupSwagger } from '@config/swagger.config';
+import { RequestExceptionFilter } from '@exceptions/request.exception';
 import { HttpStatus, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { UserEntity } from '@users/user.entity';
 import * as compression from 'compression';
 import * as ContextService from 'request-context';
-import { ConfigService } from '@config/config.service';
-import { setupSwagger } from '@config/swagger.config';
-import { RequestExceptionFilter } from '@exceptions/request.exception';
-import { UserEntity } from '@users/user.entity';
-
 import { AppModule } from './app.module';
 import { AuthGuard } from './guards/auth.guard';
 import { GeneralLogger } from './logger/general.logger';

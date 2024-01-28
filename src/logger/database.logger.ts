@@ -1,6 +1,6 @@
+import { GeneralLogger } from '@logger/general.logger';
 import { Injectable } from '@nestjs/common';
 import { QueryRunner, Logger as TypeOrmLogger } from 'typeorm';
-import { GeneralLogger } from '@logger/general.logger';
 
 @Injectable()
 export class DatabaseLogger implements TypeOrmLogger {

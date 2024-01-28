@@ -1,6 +1,6 @@
+import { Public } from '@decorators/public.decorator';
 import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
-import { Public } from '@decorators/public.decorator';
 
 @Controller()
 export class AppController {

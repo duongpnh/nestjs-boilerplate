@@ -1,7 +1,7 @@
-import { Field, ObjectType } from '@nestjs/graphql';
-import { EmailAddressResolver, UUIDResolver } from 'graphql-scalars';
 import { AbstractDto } from '@common/dto/abstract.dto';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { UserEntity } from '@users/user.entity';
+import { EmailAddressResolver, UUIDResolver } from 'graphql-scalars';
 
 @ObjectType()
 export class UserDto extends AbstractDto {

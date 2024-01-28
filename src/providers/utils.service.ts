@@ -1,5 +1,4 @@
 import { createHash, pbkdf2, randomBytes } from 'crypto';
-
 import { IResponseHashPassword } from './interfaces/IResponseHashPassword';
 
 export class UtilsService {

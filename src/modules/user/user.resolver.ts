@@ -15,7 +15,7 @@ export class UsersResolver {
   constructor(private _service: UsersService) {}
 
   @Query(() => UserPage)
-  getUsers(@Args('queryParams') queryParams: PageOptionsDto): Promise<PagingResponseDto<UserDto>> {
+  getUsers(@Args('queryParams', { nullable: true }) queryParams: PageOptionsDto): Promise<PagingResponseDto<UserDto>> {
     return this._service.getUsers(queryParams);
   }
 

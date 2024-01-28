@@ -1,16 +1,15 @@
+import { ERROR } from '@common/constants/errors.constant';
+import { ContextType } from '@common/enums/context-type.enum';
+import { ErrorCode } from '@common/enums/error-code.enum';
+import { ConfigService } from '@config/config.service';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { IRouteInfo, MAPPING_GQL_OPS_TO_ENTITY_ACTION } from '@common/constants/entity.constant';
-import { ERROR } from '@common/constants/errors.constant';
-import { ContextType } from '@common/enums/context-type.enum';
-import { ErrorCode } from '@common/enums/error-code.enum';
-import { ConfigService } from '@config/config.service';
 import { ContextService } from '@providers/context.service';
 import { UserEntity } from '@users/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -21,20 +20,6 @@ export class AuthGuard implements CanActivate {
     private _configService: ConfigService,
     private _jwtService: JwtService,
   ) {}
-
-  determineEntityInGQL(gqlInfo: any): IRouteInfo | null {
-    const { key } = gqlInfo.path;
-    const routeInfo = MAPPING_GQL_OPS_TO_ENTITY_ACTION[key];
-
-    if (!routeInfo) {
-      return null;
-    }
-
-    const { entity } = routeInfo;
-    ContextService.setEntity(entity);
-
-    return routeInfo;
-  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this._reflector.get<boolean>('PUBLIC', context.getHandler());
@@ -67,27 +52,14 @@ export class AuthGuard implements CanActivate {
 
       const user = await this._userRepo.findOne({
         where: { id: decodedToken.id },
-        relations: [
-          'userRole',
-          'userRole.role',
-          'userRole.role.rolePermissions',
-          'userRole.role.rolePermissions.permission',
-        ],
+        relations: ['userRole', 'userRole.role'],
       });
 
       if (!user) {
         throw new ForbiddenException(ERROR[ErrorCode.FORBIDDEN_RESOURCE]);
       }
 
-      const { userRole, ...restOfUser } = user;
-      const { rolePermissions } = userRole.role;
-
-      const permissions = (rolePermissions || []).map(({ permission }) => {
-        return permission;
-      });
-
-      ContextService.setPermissions(permissions);
-      ContextService.setAuthUserInfo(restOfUser);
+      ContextService.setAuthUserInfo(user);
 
       return true;
     } catch (e) {
