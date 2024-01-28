@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { ERROR } from '@common/constants/errors.constant';
+import { ErrorCode } from '@common/enums/error-code.enum';
+import { ConfigService } from '@config/config.service';
 import {
   BadRequestException,
   ConflictException,
@@ -9,12 +12,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { ERROR } from '@common/constants/errors.constant';
-import { ErrorCode } from '@common/enums/error-code.enum';
-import { ConfigService } from '@config/config.service';
 import { UtilsService } from '@providers/utils.service';
 import { UserEntity } from '@users/user.entity';
+import { DataSource, Repository } from 'typeorm';
 
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
@@ -48,10 +48,10 @@ export class AuthService {
     }
 
     try {
-      const { hash, salt } = await UtilsService.hashPassword(password);
+      const { salt, hash: passwordHash } = await UtilsService.hashPassword(password);
       await this._userRepo.save({
         ...payload,
-        hash,
+        passwordHash,
         salt,
       });
 

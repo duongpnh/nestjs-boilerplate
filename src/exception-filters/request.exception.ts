@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { STATUS_CODES } from 'http';
 
+import { ERROR } from '@common/constants/errors.constant';
+import { ErrorCode } from '@common/enums/error-code.enum';
+import { GeneralLogger } from '@logger/general.logger';
 import { ArgumentsHost, BadRequestException, Catch, HttpException, HttpStatus } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExceptionFilter } from '@nestjs/graphql';
 import { ValidationError } from 'class-validator';
 import { isArray, isEmpty, snakeCase } from 'lodash';
-import { ERROR } from '@common/constants/errors.constant';
-import { ErrorCode } from '@common/enums/error-code.enum';
-import { GeneralLogger } from '@logger/general.logger';
 
 const standardizeStatusCode = (exception: any): [HttpStatus, HttpStatus, ErrorCode, string] => {
   let ex = exception;

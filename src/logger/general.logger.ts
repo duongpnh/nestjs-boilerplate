@@ -1,11 +1,11 @@
 import { Injectable, LoggerService } from '@nestjs/common';
 import 'winston-daily-rotate-file';
 
-import * as PrettyError from 'pretty-error';
-import * as winston from 'winston';
 import { DateFormat } from '@common/enums/date-format.enum';
 import { formatDate } from '@common/utils/format-date.util';
 import configuration from '@config/environment.config';
+import * as PrettyError from 'pretty-error';
+import * as winston from 'winston';
 
 const config = configuration();
 
@@ -72,6 +72,7 @@ export class GeneralLogger implements LoggerService {
     });
     this.formattedLog('info', message);
   }
+
   error(message: string, trace?: any): void {
     const currentDate = new Date();
     // i think the trace should be JSON Stringified
@@ -81,6 +82,7 @@ export class GeneralLogger implements LoggerService {
     });
     this.formattedLog('error', message, trace);
   }
+
   warn(message: string): void {
     const currentDate = new Date();
     this.logger.warn(message, {
@@ -89,6 +91,16 @@ export class GeneralLogger implements LoggerService {
     });
     this.formattedLog('warn', message);
   }
+
+  success(message: string): void {
+    const currentDate = new Date();
+    this.logger.info(message, {
+      timestamp: currentDate.toISOString(),
+      context: this.context,
+    });
+    this.formattedLog('success', message);
+  }
+
   overrideOptions(options: winston.LoggerOptions) {
     this.logger.configure(options);
   }

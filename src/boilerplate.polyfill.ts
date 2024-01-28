@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import 'source-map-support/register';
 
-import * as _ from 'lodash';
-import { Brackets, QueryBuilder, SelectQueryBuilder } from 'typeorm';
 import { AbstractDto } from '@common/dto/abstract.dto';
 import { PageMetaDto } from '@common/dto/page-meta.dto';
 import { PageOptionsDto } from '@common/dto/page-options.dto';
 import { PagingResponseDto } from '@common/dto/paging-response.dto';
 import { AbstractEntity } from '@common/entities/abstract.entity';
+import * as _ from 'lodash';
+import { Brackets, QueryBuilder, SelectQueryBuilder } from 'typeorm';
 
 declare global {
   interface Array<T> {

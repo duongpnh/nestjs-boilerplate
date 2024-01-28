@@ -64,4 +64,10 @@ export const ERROR: Record<ErrorCode, ErrorValue> = {
     statusCode: HttpStatus.NOT_FOUND,
     serverErrorCode: ErrorCode.USER_NOT_FOUND,
   },
+  [ErrorCode.STARTUP_USER_REQUIRED]: {
+    message: 'Missing config startup user',
+    description: 'Missing config startup user. Please update config and restart server again!',
+    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+    serverErrorCode: ErrorCode.STARTUP_USER_REQUIRED,
+  },
 };

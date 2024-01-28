@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Public } from '@decorators/public.decorator';
 import { HttpStatus } from '@nestjs/common';
 import { Args, Int, Mutation, Resolver } from '@nestjs/graphql';
-import { Public } from '@decorators/public.decorator';
 
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -18,7 +18,6 @@ export class AuthResolver {
     return this._authService.register(payload);
   }
 
-  @Public()
   @Public()
   @Mutation(() => LoginResponseDto)
   login(@Args('payload') payload: LoginDto): Promise<LoginResponseDto> {

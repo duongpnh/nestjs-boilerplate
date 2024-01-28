@@ -2,18 +2,19 @@
 import * as path from 'path';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { DatabaseLogger } from '@logger/database.logger';
+import { GraphQLLogger } from '@logger/graphql.logger';
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
-import { DatabaseLogger } from '@logger/database.logger';
-import { GraphQLLogger } from '@logger/graphql.logger';
 import { SnakeNamingStrategy } from '@strategies/snake-naming.strategy';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 import configuration from './environment.config';
 import { IConfig } from './interfaces/config.interface';
 import { IJwt } from './interfaces/jwt.interface';
 import { ILog } from './interfaces/log.interface';
+import { IStartupUser } from './interfaces/startup-user.interface';
 
 @Injectable()
 export class ConfigService {
@@ -45,6 +46,10 @@ export class ConfigService {
 
   get jwtConfig(): IJwt {
     return this.config.jwtConfig;
+  }
+
+  get startupUser(): IStartupUser {
+    return this.config.user;
   }
 
   get typeOrmConfig(): TypeOrmModuleOptions {
@@ -81,7 +86,7 @@ export class ConfigService {
       username: this.config.db.username,
       password: this.config.db.password,
       database: this.config.db.database,
-      // synchronize: true,
+      synchronize: false,
       migrationsRun: true,
       namingStrategy: new SnakeNamingStrategy(),
       logging: false,

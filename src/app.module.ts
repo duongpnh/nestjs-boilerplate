@@ -1,24 +1,22 @@
+import dataSource from '@config/data-source.config';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import dataSource from '@config/data-source.config';
 import { UserRoleModule } from '@user-role/user-role.module';
 
+import 'src/boilerplate.polyfill';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigService } from './config/config.service';
 import { GqlThrottlerGuard } from './guards/thottle.guard';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { AuthModule } from './modules/auth/auth.module';
-import { PermissionModule } from './modules/permission/permission.module';
 import { RolesModule } from './modules/role/role.module';
-import { RolePermissionModule } from './modules/role-permission/role-permission.module';
 import { UsersModule } from './modules/user/user.module';
 import { SharedModule } from './shared/shared.module';
-import 'src/boilerplate.polyfill';
 
 @Module({
   imports: [
@@ -58,8 +56,6 @@ import 'src/boilerplate.polyfill';
     RolesModule,
     UsersModule,
     AuthModule,
-    PermissionModule,
-    RolePermissionModule,
     UserRoleModule,
   ],
   controllers: [AppController],

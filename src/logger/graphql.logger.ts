@@ -1,7 +1,7 @@
 import { GraphQLRequestContext } from '@apollo/server';
 import type { WithRequired } from '@apollo/utils.withrequired';
-import { Injectable } from '@nestjs/common';
 import { GeneralLogger } from '@logger/general.logger';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GraphQLLogger {

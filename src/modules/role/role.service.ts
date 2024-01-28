@@ -1,38 +1,28 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, ILike, Repository } from 'typeorm';
 import { ERROR } from '@common/constants/errors.constant';
 import { ErrorCode } from '@common/enums/error-code.enum';
-import { ConfigService } from '@config/config.service';
-import { RolePermissionEntity } from '@role-permission/role-permission.entity';
+import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import { ILike } from 'typeorm';
 
+import { GeneralLogger } from '@logger/general.logger';
 import { CreateRoleDto } from './dto/create-role.dto';
-import { RoleEntity } from './role.entity';
+import { RoleRepository } from './role.repository';
 
 @Injectable()
 export class RolesService {
-  constructor(
-    @InjectRepository(RoleEntity)
-    private _repo: Repository<RoleEntity>,
-    @InjectDataSource()
-    private _dataSource: DataSource,
-    private _config: ConfigService,
-  ) {}
+  private readonly logger: GeneralLogger = new GeneralLogger(RolesService.name);
+
+  constructor(private _repo: RoleRepository) {}
 
   /**
-   * Create a new role and attach role with permission permissions
+   * Create a new role
    * @param payload an object instance of {@link CreateRoleDto}
    * @returns a value of {@link HttpStatus}
    */
   async createRole(payload: CreateRoleDto): Promise<HttpStatus> {
-    const queryRunner = this._dataSource.createQueryRunner();
-    await queryRunner.startTransaction();
-
     try {
-      const { manager } = queryRunner;
-      const { name, permissions } = payload;
+      const { name } = payload;
 
-      const role = await manager.findOne(RoleEntity, {
+      const role = await this._repo.findOne({
         where: { name: ILike(name) },
       });
 
@@ -40,19 +30,10 @@ export class RolesService {
         throw new ConflictException(ERROR[ErrorCode.ROLE_EXISTED]);
       }
 
-      const newRole = await manager.save(RoleEntity, { name });
-      // attach role with permissions
-      const rolePermissions = permissions.map((permissionId: number) => ({ permissionId, roleId: newRole.id }));
-      await manager.insert(RolePermissionEntity, rolePermissions);
-
-      await queryRunner.commitTransaction();
-
       return HttpStatus.CREATED;
     } catch (e) {
-      await queryRunner.rollbackTransaction();
+      this.logger.error(e);
       throw new BadRequestException(e);
-    } finally {
-      await queryRunner.release();
     }
   }
 }

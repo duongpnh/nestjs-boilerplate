@@ -33,7 +33,8 @@
       "@roles/*": ["src/modules/role/*"],
       "@permissions/*": ["src/modules/permission/*"],
       "@role-permission/*": ["src/modules/role-permission/*"],
-      "@user-role/*": ["src/modules/user-role/*"]
+      "@user-role/*": ["src/modules/user-role/*"],
+      "@base/*": ["src/base/*"]
     }
   }
 }

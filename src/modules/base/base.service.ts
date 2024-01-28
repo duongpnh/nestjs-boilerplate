@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PageOptionsDto } from '@common/dto/page-options.dto';
+import { Injectable } from '@nestjs/common';
+import { SelectQueryBuilder } from 'typeorm';
+import { BaseRepository } from './base.repository';
 
 @Injectable()
 export abstract class BaseService<E> {
   public readonly entityName: string;
 
-  constructor(private _repository: Repository<E>) {
+  constructor(private _repository: BaseRepository<E>) {
     this.entityName = this._repository.metadata.name;
   }
 

@@ -29,6 +29,12 @@ export default function configuration(): IConfig {
       dailyRotateMaxSize: process.env.LOG_DAILY_ROTATE_MAX_SIZE,
       dailyRotateMaxFiles: process.env.LOG_DAILY_ROTATE_MAX_FILES,
     },
+    user: {
+      firstName: process.env.ROOT_FIRST_NAME,
+      lastName: process.env.ROOT_LAST_NAME,
+      email: process.env.ROOT_EMAIL,
+      password: process.env.ROOT_PASSWORD,
+    },
   };
 
   return configs;

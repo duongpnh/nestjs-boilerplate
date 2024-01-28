@@ -1,8 +1,8 @@
+import { AbstractEntity } from '@common/entities/abstract.entity';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { DateTimeResolver } from 'graphql-scalars';
-import { AbstractEntity } from '@common/entities/abstract.entity';
 
 @ObjectType()
 export abstract class AbstractDto {
